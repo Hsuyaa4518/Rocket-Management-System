@@ -1,33 +1,73 @@
 'use client'
 import React, { useState } from 'react';
-import {AlertTriangle, Clock, Thermometer, Wind, Activity, Package, Radio, Power } from 'lucide-react';
-import { Bar } from 'react-chartjs-2';
+import { AlertTriangle, Clock, Thermometer, Wind, Activity, Package, Radio, Power } from 'lucide-react';
+import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
-  BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
 
-// Register the required components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, LineElement, PointElement, Title, Tooltip, Legend);
 
-const BarChart: React.FC = () => {
-  const data = {
-    labels: ['T-3', 'T-2', 'T-1', 'Launch', 'T+1', 'T+2', 'T+3','T+4','T+5','T+6','T+7', 'T+8'],
+const SystemStatus: React.FC<{ icon: React.ReactNode; name: string; status: string }> = ({ icon, name, status }) => (
+  <div className="flex items-center space-x-2">
+    <div className="w-6 h-6">{icon}</div>
+    <div>
+      <p className="font-semibold">{name}</p>
+      <p>{status}</p>
+    </div>
+  </div>
+);
+
+const Alert: React.FC<{ message: string; type: string }> = ({ message, type }) => (
+  <div className={`p-2 rounded-lg ${type === 'success' ? 'bg-green-600' : 'bg-blue-600'}`}>
+    <p className="text-white">{message}</p>
+  </div>
+);
+
+const TelemetryGauge: React.FC<{ title: string; value: number; unit: string }> = ({ title, value, unit }) => (
+  <div className="bg-gray-700 p-4 rounded-lg shadow-lg">
+    <h3 className="text-lg font-semibold">{title}</h3>
+    <p>{value} {unit}</p>
+  </div>
+);
+
+const ControlButton: React.FC<{ stage: string; title: string; active: boolean; onClick: () => void }> = ({ stage, title, active, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`w-full p-2 rounded-lg ${active ? 'bg-green-600' : 'bg-gray-600'} hover:bg-green-500`}
+  >
+    {title}
+  </button>
+);
+
+const LogEntry: React.FC<{ time: React.ReactNode; message: string }> = ({ time, message }) => (
+  <div className="p-2 border-b border-gray-600">
+    <span className="font-semibold">{time}</span>: {message}
+  </div>
+);
+
+const LineChart: React.FC<{ title: string; labels: string[]; data: number[]; color: string }> = ({ title, labels, data, color }) => {
+  const chartData = {
+    labels: labels,
     datasets: [
       {
-        label: 'Thrust Level (%)',
-        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        label: title,
+        data: data,
+        fill: false,
+        borderColor: color,
+        tension: 0,
         borderWidth: 2,
-        borderRadius: 8,
-        data: [20, 35, 60, 100, 80, 55, 30, 76, 53, 23, 54, 78 ],
-        barPercentage: 0.5,
-        categoryPercentage: 1,
+        pointBackgroundColor: color,
+        pointBorderColor: color,
+        pointBorderWidth: 2,
+        pointRadius: 5,
       },
     ],
   };
@@ -38,7 +78,6 @@ const BarChart: React.FC = () => {
     scales: {
       y: {
         beginAtZero: true,
-        max: 120,
         ticks: {
           color: '#4B5563',
           font: { size: 14 },
@@ -78,42 +117,11 @@ const BarChart: React.FC = () => {
   };
 
   return (
-    <div style={{ width: '100%', height: '500px', padding: '20px' }}>
-      <Bar data={data} options={options} />
+    <div style={{ width: '100%', height: '400px', padding: '20px' }}>
+      <Line data={chartData} options={options} />
     </div>
   );
 };
-
-interface SystemStatusProps {
-  icon: React.ReactNode;
-  name: string;
-  status: string;
-}
-
-interface TelemetryGaugeProps {
-  title: string;
-  value: number;
-  unit: string;
-}
-
-interface ControlButtonProps {
-  stage: string;
-  title: string;
-  active: boolean;
-  onClick: () => void;
-}
-
-interface AlertProps {
-  message: string;
-  type: string;
-}
-
-interface LogEntryProps {
-  time: React.ReactNode;
-  message: string;
-}
-
-
 
 const DashboardLayout = () => {
   const [currentStage, setCurrentStage] = useState(1);
@@ -167,8 +175,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
-      {/* Header Bar */}
-      <header className="flex justify-between items-center mb-4 bg-gray-800 p-4 rounded-lg">
+      <header className="flex justify-between items-center mb-4 bg-gray-800 p-4 rounded-lg shadow-lg">
         <div className="flex items-center space-x-4">
           <h1 className="text-2xl font-bold">Rocket Control System</h1>
           <div className="flex items-center bg-green-600 px-3 py-1 rounded">
@@ -178,14 +185,14 @@ const DashboardLayout = () => {
         </div>
         <div className="flex items-center space-x-6">
           <Clock className="w-6 h-6" />
-          <span>T-00:00:00</span>
-          <button className="bg-red-600 px-4 py-2 rounded font-bold">ABORT</button>
+          <span className="text-lg font-mono">T-00:00:00</span>
+          <button className="bg-red-600 px-4 py-2 rounded font-bold hover:bg-red-700">ABORT</button>
         </div>
       </header>
 
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-3 space-y-4">
-          <div className="bg-gray-800 p-4 rounded-lg">
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold mb-4">Critical Systems</h2>
             <div className="space-y-4">
               <SystemStatus icon={<Power />} name="Power Systems" status="Nominal" />
@@ -195,22 +202,22 @@ const DashboardLayout = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">Environmental</h2>
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <h2 className="text-xl font-bold mb-4">Telemetry</h2>
             <div className="space-y-4">
-              <SystemStatus icon={<Thermometer />} name="Temperature" status="24°C" />
+              <SystemStatus icon={<Thermometer />} name="Temperature" status="72 °C" />
               <SystemStatus icon={<Wind />} name="Wind Speed" status="12 km/h" />
             </div>
           </div>
         </div>
 
         <div className="col-span-6 space-y-4">
-          <div className="bg-gray-800 p-4 rounded-lg h-96">
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-96">
             <h2 className="text-xl font-bold mb-4">Telemetry Display</h2>
             {renderStageUI()}
           </div>
 
-          <div className="bg-gray-800 p-4 rounded-lg">
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold mb-4">Launch Sequence Control</h2>
             <div className="grid grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((stage) => (
@@ -221,21 +228,13 @@ const DashboardLayout = () => {
                   active={currentStage === stage}
                   onClick={() => handleStageChange(stage)}
                 />
-              ))
-              }
-              {currentStage === 3 && (
-  <div className="bg-gray-800 p-4 rounded-lg">
-    <h2 className="text-xl font-bold mb-4">Thrust Level Over Time</h2>
-    <BarChart />
-  </div>
-)}
-
+              ))}
             </div>
           </div>
         </div>
 
         <div className="col-span-3 space-y-4">
-          <div className="bg-gray-800 p-4 rounded-lg">
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
             <h2 className="text-xl font-bold mb-4">System Alerts</h2>
             <div className="space-y-2">
               <Alert message="All systems nominal" type="success" />
@@ -243,68 +242,27 @@ const DashboardLayout = () => {
             </div>
           </div>
 
-          <div className="bg-gray-800 p-4 rounded-lg h-64">
-            <h2 className="text-xl font-bold mb-4">Data Log</h2>
-            <div className="space-y-2 text-sm">
-              <LogEntry time="10:45:23" message="Telemetry system check complete" />
-              <LogEntry time="10:45:20" message="Navigation systems initialized" />
-              <LogEntry time="10:45:15" message="Power systems online" />
-            </div>
+          <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-96 overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Activity Log</h2>
+            <LogEntry time={<span>10:00:01</span>} message="Pre-launch checks initiated." />
+            <LogEntry time={<span>10:15:23</span>} message="Engine ignition sequence started." />
           </div>
+        </div>
+      </div>
+
+      {/* Thrust Performance and Altitude Line Charts */}
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+          <h2 className="text-xl font-bold mb-4">Thrust Performance</h2>
+          <LineChart title="Thrust" labels={["T0", "T1", "T2", "T3", "T4", "T5"]} data={[20, 40, 60, 80, 100, 120]} color="#FF6384" />
+        </div>
+        <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+          <h2 className="text-xl font-bold mb-4">Altitude</h2>
+          <LineChart title="Altitude" labels={["T0", "T1", "T2", "T3", "T4", "T5"]} data={[0, 5, 15, 30, 45, 60]} color="#36A2EB" />
         </div>
       </div>
     </div>
   );
 };
-
-const SystemStatus: React.FC<SystemStatusProps> = ({ icon, name, status }) => (
-  <div className="flex items-center justify-between">
-    <div className="flex items-center">
-      {icon}
-      <span className="ml-2">{name}</span>
-    </div>
-    <span className="text-green-400">{status}</span>
-  </div>
-);
-
-const TelemetryGauge: React.FC<TelemetryGaugeProps> = ({ title, value, unit }) => (
-  <div className="bg-gray-700 p-4 rounded-lg shadow-lg">
-    <div className="flex justify-between items-center mb-2">
-      <span>{title}</span>
-      <span className="text-green-400">{value}{unit}</span>
-    </div>
-    <div className="w-full bg-gray-600 rounded-full h-2">
-      <div 
-        className="bg-green-500 rounded-full h-2"
-        style={{ width: `${value}%` }}
-      />
-    </div>
-  </div>
-);
-
-const ControlButton: React.FC<ControlButtonProps> = ({ stage, title, active, onClick }) => (
-  <button 
-    onClick={onClick}
-    className={`p-4 rounded-lg text-center ${
-      active ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-700 hover:bg-gray-600'
-    }`}
-  >
-    <h3 className="text-lg font-bold">{title}</h3>
-    <p className="text-sm text-gray-300">Stage {stage}</p>
-  </button>
-);
-
-const Alert: React.FC<AlertProps> = ({ message, type }) => (
-  <div className={`p-2 rounded ${type === 'success' ? 'bg-green-600' : type === 'info' ? 'bg-blue-600' : 'bg-red-600'}`}>
-    {message}
-  </div>
-);
-
-const LogEntry: React.FC<LogEntryProps> = ({ time, message }) => (
-  <div className="flex justify-between">
-    <span className="text-gray-400">{time}</span>
-    <span>{message}</span>
-  </div>
-);
 
 export default DashboardLayout;
