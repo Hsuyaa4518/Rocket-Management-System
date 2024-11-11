@@ -38,7 +38,7 @@ const TelemetryGauge: React.FC<{ title: string; value: number; unit: string }> =
   </div>
 );
 
-const ControlButton: React.FC<{ string; title: string; active: boolean; onClick: () => void }> = ({ title, active, onClick }) => (
+const ControlButton: React.FC<{ title: string; active: boolean; onClick: () => void }> = ({ title, active, onClick }) => (
   <button
     onClick={onClick}
     className={`w-full p-2 rounded-lg ${active ? 'bg-green-600' : 'bg-gray-600'} hover:bg-green-500`}
@@ -126,10 +126,9 @@ const LineChart: React.FC<{ title: string; labels: string[]; data: number[]; col
 const DashboardLayout = () => {
   const [currentStage, setCurrentStage] = useState(1);
 
-  const handleStageChange =  number) => {
-    setCurrentStage;
+  const handleStageChange = (stage: number) => {
+    setCurrentStage(stage);
   };
-
   const renderStageUI = () => {
     switch (currentStage) {
       case 1:
@@ -218,15 +217,14 @@ const DashboardLayout = () => {
           </div>
 
           <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Launch Sequence Control</h2>
+          <h2 className="text-xl font-bold mb-4">Launch Sequence Control</h2>
             <div className="grid grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map( => (
+              {[1, 2, 3, 4].map((stage) => (
                 <ControlButton
-                  key=
-                {`$`}
-                  title={["Pre-Launch Check", "Engine Ignition", "Launch", "Stage Separation"]- 1]}
-                  active={currentStage ===
-                  onClick={() => handleStageChange}
+                  key={stage}
+                  title={["Pre-Launch Check", "Engine Ignition", "Launch", "Stage Separation"][stage - 1]}
+                  active={currentStage === stage}
+                  onClick={() => handleStageChange(stage)}
                 />
               ))}
             </div>
