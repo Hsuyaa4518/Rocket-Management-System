@@ -41,11 +41,12 @@ const TelemetryGauge: React.FC<{ title: string; value: number; unit: string }> =
 const ControlButton: React.FC<{ stage: string; title: string; active: boolean; onClick: () => void }> = ({ stage, title, active, onClick }) => (
   <button
     onClick={onClick}
-    className={`w-full p-2 rounded-lg ${active ? 'bg-green-600' : 'bg-gray-600'} hover:bg-green-500`}
+    className={`w-full p-2 rounded-lg ${active ? 'bg-green-600' : 'bg-gray-600'} hover:bg-green-500 ${stage === '1' ? 'bg-red-500' : ''}`}
   >
     {title}
   </button>
 );
+
 
 const LogEntry: React.FC<{ time: React.ReactNode; message: string }> = ({ time, message }) => (
   <div className="p-2 border-b border-gray-600">
@@ -239,11 +240,9 @@ const DashboardLayout = () => {
                 {[1, 2, 3, 4].map((stage) => (
                   <ControlButton
                     key={stage}
-                    stage={`${stage}`}
                     title={["Pre-Launch Check", "Engine Ignition", "Launch", "Stage Separation"][stage - 1]}
                     active={currentStage === stage}
-                    onClick={() => handleStageChange(stage)}
-                  />
+                    onClick={() => handleStageChange(stage)} stage={''}                  />
                 ))}
               </div>
             </div>
