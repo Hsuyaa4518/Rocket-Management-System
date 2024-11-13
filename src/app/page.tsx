@@ -38,7 +38,7 @@ const TelemetryGauge: React.FC<{ title: string; value: number; unit: string }> =
   </div>
 );
 
-const ControlButton: React.FC<{ stage: string; title: string; active: boolean; onClick: () => void }> = ({ stage, title, active, onClick }) => (
+const ControlButton: React.FC<{ title: string; active: boolean; onClick: () => void }> = ({ title, active, onClick }) => (
   <button
     onClick={onClick}
     className={`w-full p-2 rounded-lg ${active ? 'bg-green-600' : 'bg-gray-600'} hover:bg-green-500 ${stage === '1' ? 'bg-red-500' : ''}`}
@@ -131,7 +131,6 @@ const DashboardLayout = () => {
   const handleStageChange = (stage: number) => {
     setCurrentStage(stage);
   };
-
   const renderStageUI = () => {
     switch (currentStage) {
       case 1:
