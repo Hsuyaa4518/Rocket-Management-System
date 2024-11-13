@@ -125,6 +125,7 @@ const LineChart: React.FC<{ title: string; labels: string[]; data: number[]; col
 
 const DashboardLayout = () => {
   const [currentStage, setCurrentStage] = useState(1);
+  const [isAnalyticsView, setIsAnalyticsView] = useState(false);
 
   const handleStageChange = (stage: number) => {
     setCurrentStage(stage);
@@ -173,6 +174,15 @@ const DashboardLayout = () => {
     }
   };
 
+  const renderAnalyticsView = () => (
+    <div className="grid grid-cols-2 gap-4">
+      <LineChart title="Pressure" labels={["T0", "T1", "T2", "T3", "T4", "T5"]} data={[100, 200, 300, 400, 500, 600]} color="#FF6384" />
+      <LineChart title="Temperature" labels={["T0", "T1", "T2", "T3", "T4", "T5"]} data={[25, 27, 30, 28, 26, 24]} color="#36A2EB" />
+      <LineChart title="Accelerometer" labels={["T0", "T1", "T2", "T3", "T4", "T5"]} data={[1, 2, 1.5, 1.8, 2.1, 2.3]} color="#FFCE56" />
+      <LineChart title="Gyroscope" labels={["T0", "T1", "T2", "T3", "T4", "T5"]} data={[0, 15, 30, 45, 30, 15]} color="#4BC0C0" />
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <header className="flex justify-between items-center mb-4 bg-gray-800 p-4 rounded-lg shadow-lg">
@@ -186,69 +196,76 @@ const DashboardLayout = () => {
         <div className="flex items-center space-x-6">
           <Clock className="w-6 h-6" />
           <span className="text-lg font-mono">T-00:00:00</span>
+          <button className="bg-blue-600 px-6 py-3 rounded-lg hover:bg-blue-500" onClick={() => setIsAnalyticsView(!isAnalyticsView)}>
+            {isAnalyticsView ? "Back to Dashboard" : "Analytics"}
+          </button>
           <button className="bg-red-600 px-4 py-2 rounded font-bold hover:bg-red-700">ABORT</button>
         </div>
       </header>
 
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-3 space-y-4">
-          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Critical Systems</h2>
-            <div className="space-y-4">
-              <SystemStatus icon={<Power />} name="Power Systems" status="Nominal" />
-              <SystemStatus icon={<Radio />} name="Communication" status="Strong" />
-              <SystemStatus icon={<Package />} name="Payload" status="Secured" />
-              <SystemStatus icon={<AlertTriangle />} name="Warnings" status="None" />
+      {isAnalyticsView ? (
+        renderAnalyticsView()
+      ) : (
+        <div className="grid grid-cols-12 gap-4">
+          <div className="col-span-3 space-y-4">
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h2 className="text-xl font-bold mb-4">Critical Systems</h2>
+              <div className="space-y-4">
+                <SystemStatus icon={<Power />} name="Power Systems" status="Nominal" />
+                <SystemStatus icon={<Radio />} name="Communication" status="Strong" />
+                <SystemStatus icon={<Package />} name="Payload" status="Secured" />
+                <SystemStatus icon={<AlertTriangle />} name="Warnings" status="None" />
+              </div>
+            </div>
+
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h2 className="text-xl font-bold mb-4">Telemetry</h2>
+              <div className="space-y-4">
+                <SystemStatus icon={<Thermometer />} name="Temperature" status="72 °C" />
+                <SystemStatus icon={<Wind />} name="Wind Speed" status="12 km/h" />
+              </div>
             </div>
           </div>
 
-          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Telemetry</h2>
-            <div className="space-y-4">
-              <SystemStatus icon={<Thermometer />} name="Temperature" status="72 °C" />
-              <SystemStatus icon={<Wind />} name="Wind Speed" status="12 km/h" />
+          <div className="col-span-6 space-y-4">
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-96">
+              <h2 className="text-xl font-bold mb-4">Telemetry Display</h2>
+              {renderStageUI()}
+            </div>
+
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h2 className="text-xl font-bold mb-4">Launch Sequence Control</h2>
+              <div className="grid grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((stage) => (
+                  <ControlButton
+                    key={stage}
+                    stage={`${stage}`}
+                    title={["Pre-Launch Check", "Engine Ignition", "Launch", "Stage Separation"][stage - 1]}
+                    active={currentStage === stage}
+                    onClick={() => handleStageChange(stage)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="col-span-3 space-y-4">
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
+              <h2 className="text-xl font-bold mb-4">System Alerts</h2>
+              <div className="space-y-2">
+                <Alert message="All systems nominal" type="success" />
+                <Alert message="Weather conditions optimal" type="info" />
+              </div>
+            </div>
+
+            <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-96 overflow-y-auto">
+              <h2 className="text-xl font-bold mb-4">Activity Log</h2>
+              <LogEntry time={<span>10:00:01</span>} message="Pre-launch checks initiated." />
+              <LogEntry time={<span>10:15:23</span>} message="Engine ignition sequence started." />
             </div>
           </div>
         </div>
-
-        <div className="col-span-6 space-y-4">
-          <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-96">
-            <h2 className="text-xl font-bold mb-4">Telemetry Display</h2>
-            {renderStageUI()}
-          </div>
-
-          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">Launch Sequence Control</h2>
-            <div className="grid grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((stage) => (
-                <ControlButton
-                  key={stage}
-                  stage={`${stage}`}
-                  title={["Pre-Launch Check", "Engine Ignition", "Launch", "Stage Separation"][stage - 1]}
-                  active={currentStage === stage}
-                  onClick={() => handleStageChange(stage)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="col-span-3 space-y-4">
-          <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-            <h2 className="text-xl font-bold mb-4">System Alerts</h2>
-            <div className="space-y-2">
-              <Alert message="All systems nominal" type="success" />
-              <Alert message="Weather conditions optimal" type="info" />
-            </div>
-          </div>
-
-          <div className="bg-gray-800 p-4 rounded-lg shadow-lg h-96 overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Activity Log</h2>
-            <LogEntry time={<span>10:00:01</span>} message="Pre-launch checks initiated." />
-            <LogEntry time={<span>10:15:23</span>} message="Engine ignition sequence started." />
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Thrust Performance and Altitude Line Charts */}
       <div className="grid grid-cols-2 gap-4 mt-4">
